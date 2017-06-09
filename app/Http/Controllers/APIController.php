@@ -275,7 +275,12 @@ class APIController extends Controller
 
     public function linkShow(Request $request, $id)
     {
-        $link = Link::firstOrFail($id);
+        if ($share = Link::findOrFail($id)->share) {
+            $share->readCount++;
+            $share->save();
+        } else {
+            $link = Auth::user()->links()->findOrFail($id);
+        }
 
         return [
             'id' => $link->id,
