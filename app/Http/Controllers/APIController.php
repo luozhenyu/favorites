@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Category;
+use App\Link;
 use App\User;
 use DiDom\Document;
 use Exception;
@@ -274,7 +275,7 @@ class APIController extends Controller
 
     public function linkShow(Request $request, $id)
     {
-        $link = Auth::user()->links()->findOrFail($id);
+        $link = Link::firstOrFail($id);
 
         return [
             'id' => $link->id,
