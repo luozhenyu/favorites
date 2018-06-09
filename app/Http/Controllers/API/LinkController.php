@@ -228,7 +228,7 @@ class LinkController extends Controller
 
         return [
             'errcode' => 0,
-            'share_url' => action('API\LinkController@share', $share->code),
+            'share_url' => action('ShareController@show', $share->code),
         ];
     }
 }

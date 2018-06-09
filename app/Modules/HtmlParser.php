@@ -5,12 +5,17 @@ namespace App\Modules;
 use andreskrey\Readability\Configuration;
 use andreskrey\Readability\ParseException;
 use andreskrey\Readability\Readability;
+use DiDom\Document;
+use DiDom\Query;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 
 class HtmlParser
 {
     protected $html;
+
+    protected $document;
+
 
     protected $targetUrl;
 
@@ -21,7 +26,8 @@ class HtmlParser
      */
     public function __construct(string $html, $targetUrl = null)
     {
-        $this->html = $html;
+        $this->html = preg_replace('/<script[\s\S]*?<\/script>/i', '', $html);
+        $this->document = new Document($this->html);
         $this->targetUrl = $targetUrl;
     }
 
@@ -32,6 +38,7 @@ class HtmlParser
     public static function fromUrl(string $targetUrl)
     {
         $parts = static::requestHtml($targetUrl);
+
         return new static($parts['html'], $targetUrl);
     }
 
@@ -45,36 +52,29 @@ class HtmlParser
         $client = new Client;
 
         $splashUrl = rtrim(env('SPLASH_URL'), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'execute';
-        $response = $client->get($splashUrl, [
-            'query' => [
-                'lua_source' => static::getLuaSource(),
 
-                'url' => $url,
-                'user_agent' => 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
-                'wait' => 0.5,
+        $defaultConfig = [
+            'lua_source' => static::getLuaSource(),
+            'url' => $url,
+            'user_agent' => 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:60.0) Gecko/20100101 Firefox/60.0',
+            'wait' => 0.5,
+        ];
+
+        $customConfig = [
+            'mp.weixin.qq.com' => [
+                'wait' => 2,
             ],
-        ]);
+        ];
 
+        foreach ($customConfig as $key => $config) {
+            if (str_contains($url, $key)) {
+                $defaultConfig = array_merge($defaultConfig, $config);
+            }
+        }
+
+        $response = $client->get($splashUrl, ['query' => $defaultConfig]);
         $content = $response->getBody()->getContents();
         return json_decode($content, true);
-    }
-
-    /**
-     * @return string
-     */
-    protected static function getLuaSource()
-    {
-        return <<<LUA
-function main(splash)
-    splash:set_user_agent(splash.args.user_agent)
-    assert(splash:go(splash.args.url))
-    assert(splash:wait(splash.args.wait))
-    return {
-        html = splash:html(),
-        png = splash:png(),
-    }
-end
-LUA;
     }
 
     /**
@@ -82,7 +82,7 @@ LUA;
      */
     public function getSummary()
     {
-        if (strlen($this->html) < 200) {
+        if (strlen($this->html) < 512) {
             $summary = [
                 'title' => '网页长度过短',
                 'cover' => null,
@@ -103,6 +103,7 @@ LUA;
         }
 
         $summary['url'] = $this->targetUrl;
+
         return $summary;
     }
 
@@ -119,11 +120,70 @@ LUA;
         $readability = new Readability($configuration);
         $readability->parse($this->html);
 
+        $title = trim($readability->getTitle());
+        $cover = optional($readability->getImages())[0];
+        $abstract = trim($readability->getExcerpt());
+        $content = trim(clean($readability->getContent()));
+
+        $customConfig = [
+            'mp.weixin.qq.com' => function () use (&$title, &$content) {
+                $title = null;
+                $content = str_replace('tp=webp', '', $content);
+            },
+        ];
+
+        foreach ($customConfig as $key => $callback) {
+            if (str_contains($this->targetUrl, $key)) {
+                $callback();
+            }
+        }
+
+        if (empty($abstract)) {
+            $contentDocument = new Document($content);
+            $firstTextNode = $contentDocument->first('//p[string-length() > 6]', Query::TYPE_XPATH);
+            $abstract = trim($firstTextNode->text());
+        }
+
+        if (empty($title)) {
+            if ($firstHeaderNode = $this->document->first('(//h1|//h2|//h3|//h4|//h5|//p)[string-length() > 3]', Query::TYPE_XPATH)) {
+                $title = trim($firstHeaderNode->text());
+            } else {
+                $title = substr($abstract, 0, 10);
+            }
+        }
+
         return [
-            'title' => trim($readability->getTitle()),
-            'cover' => optional($readability->getImages())[0],
-            'abstract' => $readability->getExcerpt(),
-            'content' => clean($readability->getContent()),
+            'title' => $title,
+            'cover' => $cover,
+            'abstract' => $abstract,
+            'content' => $content,
         ];
     }
+
+    /**
+     * @return string
+     */
+    protected static function getLuaSource()
+    {
+        return <<<LUA
+function main(splash)
+    splash:set_user_agent(splash.args.user_agent)
+    splash:set_viewport_size(640, 10000)
+    
+    assert(splash:go(splash.args.url))
+    assert(splash:wait(1))
+    
+    splash:set_viewport_size(640, 1)
+    assert(splash:wait(0.1))
+    assert(splash:set_viewport_full())
+    assert(splash:wait(splash.args.wait))
+    
+    return {
+        html = splash:html(),
+        --png = splash:png(),
+    }
+end
+LUA;
+    }
+
 }

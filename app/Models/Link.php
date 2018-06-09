@@ -31,7 +31,7 @@ class Link extends Model
             'category_id' => $this->category_id,
             'tags' => $this->tags,
             'abstract' => $this->abstract,
-            'share_url' => $share ? action('API\LinkController@share', $share->code) : null,
+            'share_url' => $share ? action('ShareController@show', $share->code) : null,
             'share_count' => optional($share)->read_count,
         ];
     }

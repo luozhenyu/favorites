@@ -60,6 +60,7 @@ class RichText
             $node['name'] = $element->tag;
 
             $attributes = $element->attributes();
+            //Responsive image
             if ($node['name'] === 'img') {
                 $attributes['style'] = trim(($attributes['style'] ?? '') . ' max-width:100%; height:auto;');
             }
