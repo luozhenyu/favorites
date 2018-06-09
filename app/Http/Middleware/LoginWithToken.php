@@ -2,7 +2,7 @@
 
 namespace App\Http\Middleware;
 
-use App\User;
+use App\Models\User;
 use Closure;
 use Illuminate\Support\Facades\Auth;
 
@@ -19,13 +19,18 @@ class LoginWithToken
     {
         $third_session = $request->input('third_session');
 
-        if (!$user = User::where('third_session', $third_session)->first()) {
+        /** @var User $user */
+        if (!$user = User::query()->where('third_session', $third_session)->first()) {
+
             return response()->json([
-                "errcode" => -1,
-                "errmsg" => 'invalid third_session',
+                'errcode' => 1,
+                'errmsg' => 'invalid third_session',
+                'third_session' => $third_session,
             ]);
         }
+
         Auth::login($user);
+
         return $next($request);
     }
 }

@@ -16,12 +16,9 @@ class CreateSharesTable extends Migration
         Schema::create('shares', function (Blueprint $table) {
             $table->increments('id');
             $table->string('code');
-            $table->integer('readCount')->unsigned()->default(0);
-            $table->integer('link_id')->unsigned();
+            $table->unsignedInteger('read_count')->default(0);
+            $table->unsignedInteger('link_id');
             $table->timestamps();
-
-            $table->foreign('link_id')->references('id')->on('links')
-                ->onUpdate('cascade')->onDelete('cascade');
         });
     }
 

@@ -1,6 +1,6 @@
 <?php
 
-namespace App;
+namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
@@ -12,11 +12,14 @@ class Share extends Model
      * @var array
      */
     protected $fillable = [
-        'code', 'readCount',
+        'code', 'read_count',
     ];
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
     public function link()
     {
-        return $this->belongsTo('App\Link');
+        return $this->belongsTo(Link::class);
     }
 }

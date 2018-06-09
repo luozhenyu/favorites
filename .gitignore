@@ -5,7 +5,12 @@
 /vendor
 /.idea
 /.vagrant
+/bin
 Homestead.json
 Homestead.yaml
 npm-debug.log
+composer.lock
 .env
+.DS_Store
+_ide_helper.php
+.phpstorm.meta.php

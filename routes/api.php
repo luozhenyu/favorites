@@ -10,16 +10,17 @@
 | is assigned the "api" middleware group. Enjoy building your API!
 |
 */
-Route::get('/login', 'APIController@login');
 
-Route::get('/category', 'APIController@categoryIndex');
-Route::get('/category/create', 'APIController@categoryCreate');
-Route::get('/category/{id}/delete', 'APIController@categoryDelete');
+Route::get('/login', 'API\LoginController@login');
 
-Route::get('/link', 'APIController@linkIndex');
-Route::get('/link/search', 'APIController@linkSearch');
-Route::get('/link/create', 'APIController@linkCreate');
-Route::get('/link/{id}', 'APIController@linkShow');
-Route::get('/link/{id}/modify', 'APIController@linkModify');
-Route::get('/link/{id}/delete', 'APIController@linkDelete');
-Route::get('/link/{id}/share', 'APIController@linkShare');
+Route::get('/category', 'API\CategoryController@index');
+Route::get('/category/create', 'API\CategoryController@store');
+Route::get('/category/{categoryID}/delete', 'API\CategoryController@delete');
+
+Route::get('/link', 'API\LinkController@index');
+Route::get('/link/search','API\LinkController@search');
+Route::get('/link/create', 'API\LinkController@store');
+Route::get('/link/{linkID}', 'API\LinkController@show');
+Route::get('/link/{linkID}/modify', 'API\LinkController@update');
+Route::get('/link/{linkID}/delete', 'API\LinkController@delete');
+Route::get('/link/{linkID}/share', 'API\LinkController@share');

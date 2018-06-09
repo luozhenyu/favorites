@@ -1,6 +1,6 @@
 <?php
 
-namespace App;
+namespace App\Models;
 
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -19,22 +19,18 @@ class User extends Authenticatable
     ];
 
     /**
-     * The attributes that should be hidden for arrays.
-     *
-     * @var array
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    protected $hidden = [
-        'openid', 'session_key',
-    ];
-
-
     public function links()
     {
-        return $this->hasMany('App\Link');
+        return $this->hasMany(Link::class);
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
     public function categories()
     {
-        return $this->hasMany('App\Category');
+        return $this->hasMany(Category::class);
     }
 }

@@ -33,11 +33,12 @@
         }
     </style>
 </head>
+
 <body>
 <h2 class="title center">{{ $link->title }}</h2>
 <section style="text-align: right">
     <span class="info">分享者ID：{{ $link->user->id }}</span>
-    <span class="info">阅读次数：{{ $link->share->readCount }}</span>
+    <span class="info">阅读次数：{{ $share->read_count }}</span>
 </section>
 
 <article class="weui-article">
