@@ -126,8 +126,12 @@ class HtmlParser
         $content = trim(clean($readability->getContent()));
 
         $customConfig = [
-            'mp.weixin.qq.com' => function () use (&$title, &$content) {
+            'mp.weixin.qq.com' => function () use (&$title, &$cover, &$content) {
                 $title = null;
+                if ($cover) {
+                    $cover = str_replace('tp=webp', '', $cover);
+                    $cover = str_replace('http://', 'https://', $cover);
+                }
                 $content = str_replace('tp=webp', '', $content);
             },
         ];
